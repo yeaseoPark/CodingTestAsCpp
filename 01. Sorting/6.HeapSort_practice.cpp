@@ -4,6 +4,7 @@
 const int number = 8;
 int heap[number] = {1, 7, 5, 3, 9, 10, 2, 4};
 
+// makeHeap = Èü ¸¸µé±â 
 void makeHeap(int * data, int end){
 	int child, root;
 	for(int c = end; c >= 1; c --){
