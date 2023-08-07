@@ -1,92 +1,90 @@
 #include <iostream>
-#include <vector>
 #include <queue>
+#include <vector>
 #include <algorithm>
+
 using namespace std;
 
-int N;
-// pair(nextNode, 거리) 
-vector<pair<int, int> > data[100001];
+int V;
+vector<pair<int, int> > DATA[100001];
 
-int BFS(int start){
-	int res = -999;
-	// 1. dfs 자원 선언: pair(node 번호, start 부터의 거리) 
+bool compare(pair<int, int> &a, pair<int, int> &b){
+	return a.second > b.second;
+}
+
+// 3. BFS 실행(start 에서부터 가장 긴 거리와 가장 먼 노드 return) 
+pair<int, int> BFS(int start){
+	// 3.1 필요 자원 선언
 	queue<pair<int, int> > q;
-	int visited[N+1];
+	int visited[V+1];
+	fill_n(visited, V+1, 0);
+	int res_dist = -999;
+	int res_node;
 	
-	// 2. start 갱신
+	// 3.2 START 초기화
 	q.push(make_pair(start, 0));
 	visited[start] = true;
 	
-	// 3. BFS 만들기
+	// 3.3 q가 빌 때까지 방문
 	pair<int, int> now;
-	int now_node, now_distance, next_node, next_distance;
-	
-	// 3.1 큐가 빌 때까지 pop 
+	int now_node, now_dist, next_node, next_dist;
 	while(!q.empty()){
 		now = q.front();
-		now_node = now.first;
-		now_distance = now.second;
 		q.pop();
-
-		// 3.2 꺼낸 노드에서 이동할 수 있는 노드들 중에서		
-		for(int next = 0; next < data[now_node].size() ; next ++){
-			next_node = data[now_node][next].first;
-			next_distance = data[now_node][next].second + now_distance;
-			printf("%d \n", next_distance);
-			// 3.3 방문하지 않은 노드는 q에 넣고 visit 갱신 
-			if(!visited[next_node]){
-				q.push(make_pair(next_node, next_distance));
-				visited[next_node] = true;
-				cout << next_distance << endl;
-				
-				// 3.4 만약 갱신할 거리가 res 보다 크다면 해당 거리로 res 갱신 
-				res = max(res, next_distance);
-			}
-		} // for end
+		now_node = now.first;
+		now_dist = now.second;
+	
 		
+		for(int next = 0; next <DATA[now_node].size(); next ++){
+			next_node = DATA[now_node][next].first;
+			next_dist = DATA[now_node][next].second + now_dist;
+			
+			if(visited[next_node] == 0){
+				q.push(make_pair(next_node, next_dist));
+				visited[next_node] = true;
+				if(res_dist < next_dist){
+					res_node = next_node;
+					res_dist = next_dist;
+				}
+			} // if end
+		} // for end
 	} // while end
 	
-	// 4. 최대 길이 출력 
-	cout << res << endl;;
-	cout <<"**********" << endl;
-	return res;
-} // BFS end
+	return make_pair(res_node, res_dist);
+} // BFS END
 
 
 int main(void){
 	
-	// 0. 데이터 받기 
-	cin >> N;
-	int parent = 0, child, distance;
-	
-	for(int i = 0; i < N; i ++){
-		cin >> parent;
+	// 1. 데이터 받기
+	cin >> V;
+	int v1, v2, dist;
+	for(int idx = 0; idx < V; idx ++){
+		cin >> v1;
+		cin >> v2;
 		
-		cin >> child;
-			
-		while(child != -1){
-			cin >> distance;
-			data[parent].push_back(make_pair(child, distance));
-			data[child].push_back(make_pair(parent, distance));
-			cin >> child;
+		while(v2 != -1){
+			cin >> dist;
+			DATA[v1].push_back(make_pair(v2, dist));
+			DATA[v2].push_back(make_pair(v1, dist));
+			cin >> v2;
 		}
 	}
 	
-	// 디버깅용 코드 
-	for(int i = 1; i <= N; i ++){
-		for(int j = 0; j < data[i].size(); j ++){
-			printf("(%d, %d)       ", data[i][j].first, data[i][j].second);
-		}
-		printf("\n");
-	}
+	// 2. 데이터 오름차순 정렬
+	for(int idx = 1; idx <= V; idx ++) sort(DATA[idx].begin(), DATA[idx].end(), compare);
 	
-	// 4. 모든 노드들에 대해 bfs 수행
-	int res = -999;
-	for(int start = 1; start <= N; start ++) res = max(res, BFS(start));
 	
-	// 5. 결과 출력
-	cout << res; 
+	// 3. 임의의 점에서 bfs -> 임의의 점에서 가장 먼 곳에서 다시 한 번 bfs 
+	pair<int, int> first_res, second_res;
+	
+	first_res = BFS(1);
+	second_res = BFS(first_res.first);
+	
+	
+	cout << max(first_res.second, second_res.second) << endl;
 	
 	return 0;
 }
+
+
