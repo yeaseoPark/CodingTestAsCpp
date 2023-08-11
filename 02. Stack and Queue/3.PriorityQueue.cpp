@@ -10,7 +10,7 @@ struct Student {
 
     // 그냥 점수에 상관 없이 학번기준 학번이 작은것이 Top 을 유지 한다
     bool operator<(const Student s) const {
-        return this->id < s.id;
+        return this->id > s.id;
     }
 };
  
