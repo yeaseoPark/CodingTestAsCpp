@@ -1,60 +1,63 @@
 #include <iostream>
-#include <queue>
-#include <vector>
+#include <algorithm>
+#include <queue> 
 
 using namespace std;
 
-const int MOVEM[] = {0, 0, -1, 1, 0, 0};
-const int MOVEN[] = {0, 0, 0, 0, -1, 1};
-const int MOVEH[] = {-1, 1, 0, 0, 0, 0};
+const int MMOVE[6] = {0, 0, 0, 0, 1, -1};
+const int NMOVE[6] = {0, 0, 1, -1, 0, 0};
+const int HMOVE[6] = {1, -1, 0, 0, 0, 0};
 
 int M, N, H;
+// TOMATAO[H][N][M] visited[H][N][M]
 int TOMATO[100][100][100];
 int visited[100][100][100];
 
+int max_day = -1;
+
 struct Node{
-	// m = 가로좌표, n = 세로좌표, h = 높이좌표
-	// day = 익는데 걸리는 시간 
 	int h;
 	int n;
 	int m;
-	int day;
 	
-	Node(){}
+	Node(){
+		
+	}
 	
-	Node(int h, int n, int m, int day){
-		this -> m = m;
-		this -> n = n;
+	Node(int h, int n, int m){
 		this -> h = h;
-		this -> day = day;
+		this -> n = n;
+		this -> m = m;
 	}
 };
 
-int main(void){
-	
-	// 1. M, N, H 구하기
-	cin >> M; cin >> N; cin >> H;
-	
-	// 2. TOMATO 입력 받기
-	for(int h = 0; h < H; h ++){
+void showTomato(){
+	for(int h = 0; h < H; h++){
 		for(int n = 0; n < N; n ++){
-			for(int m = 0; m < M; m ++) cin >> TOMATO[h][n][m];
+			for(int m = 0; m < M; m ++) printf("%d ", TOMATO[h][n][m]);
+			printf("\n");
+		}
+		printf("\n");
+	} 
+}
+
+void bfs(){
+	// 1. 초기 자원 선언
+	// 1.1 visited 초기화 
+	for(int h = 0; h < H; h++){
+		for(int n = 0; n < N; n ++){
+			for(int m = 0; m < M; m ++) visited[h][n][m] = false;
 		}
 	}
+	// 1.2 queue 선언 : pair<node, day>
+	queue<pair<Node, int> > q;
 	
-	// 3. BFS 사용하기
-	// 3.1 자원 선언
-	/*
-	- q = BFS 방문용 자원; Node 참고 
-	*/
-	queue<Node> q;
-	
-	// 3.2 0일차 익은 토마토에 대해서 갱신
-	for(int h = 0; h < H; h ++){
+	// 2. 초기값 넣기
+	for(int h = 0; h < H; h++){
 		for(int n = 0; n < N; n ++){
-			for(int m = 0; m < M; m ++) {
+			for(int m = 0; m < M; m ++){
 				if(TOMATO[h][n][m] == 1){
-					q.push(Node(h, n, m, 0));
+					q.push(make_pair(Node(h, n, m), 0));
 					visited[h][n][m] = true;
 				}
 				if(TOMATO[h][n][m] == -1){
@@ -62,62 +65,67 @@ int main(void){
 				}
 			}
 		}
-	}
+	} 
 	
-	// 3.3 1일차부터 BFS로 토마토 후숙시키기
-	Node cur;
+	// 3. 전체 노드 탐색
+	pair<Node, int> cur;
 	int next_h, next_n, next_m;
 	while(!q.empty()){
 		cur = q.front();
-		q.pop();		
+		q.pop();
+		max_day = max(max_day, cur.second);
 		
 		for(int move = 0; move < 6; move ++){
-			next_h = cur.h + MOVEH[move];
-			next_n = cur.n + MOVEN[move];
-			next_m = cur.m + MOVEM[move];
+			next_h = cur.first.h + HMOVE[move];
+			next_n = cur.first.n + NMOVE[move];
+			next_m = cur.first.m + MMOVE[move];
 			
+			// 3.1 상자 밖을 벗어나면 안 된다 
 			if(next_h < 0 || next_n < 0 || next_m < 0) continue;
-			if(next_h > H || next_n > N || next_m > M) continue;
+			if(next_h >= H || next_n >= N || next_m >= M) continue;
+			// 3.2 방문한 노드를 재방문하지 않는다. 
 			if(visited[next_h][next_n][next_m]) continue;
+			// 3.3 익지않은 토마토만 익힌다. 
+			if(TOMATO[next_h][next_n][next_m] != 0) continue;
 			
-			if(TOMATO[next_h][next_n][next_m] == 0){
-				TOMATO[next_h][next_n][next_m] = 1;
-				visited[next_h][next_n][next_m] = true;
-				q.push(Node(next_h, next_n, next_m, cur.day + 1));
-			}
+			TOMATO[next_h][next_n][next_m] = 1;
+			q.push(make_pair(Node(next_h, next_n, next_m), cur.second + 1));
+			visited[next_h][next_n][next_m] = true;
 		}
-	}
-	
-	
-	cout << "tomato" << endl;
-	for(int h = 0; h < H; h ++){
-		for(int n = 0; n < N; n ++){
-			for(int m = 0; m < M; m ++) {
-				printf("%d ", TOMATO[h][n][m]);
-			}
-			cout << endl;
-		}
-		cout << endl;
-	}
-	
-	cout << "visited" << endl;
-	for(int h = 0; h < H; h ++){
-		for(int n = 0; n < N; n ++){
-			for(int m = 0; m < M; m ++) {
-				printf("%d ", visited[h][n][m]);
-			}
-			cout << endl;
-		}
-		cout << endl;
-	}
-	// 3.4 BFS의 가장 긴 높이값 반환(day) 
-	
-	// 4. 안 익은 토마토 찾기
+	} 
+}
 
+bool existZero(){
+	for(int h = 0; h < H; h++){
+		for(int n = 0; n < N; n ++){
+			for(int m = 0; m < M; m ++) {
+				if(TOMATO[h][n][m] == 0) return true;
+			}
+		}
+	}
 	
-	// 5. 결과 출력
-	// 5.1 만일 안 익은 토마토가 있다면 -1 출력
-	// 5.2 안 익은 토마토가 없다면 BFS 반환값 출력 
+	return false;
+}
+
+int main(void){
+	// 1. M, N, H
+	cin >> M >> N >> H;
 	
+	// 2. 토마토 받기
+	for(int h = 0; h < H; h++){
+		for(int n = 0; n < N; n ++){
+			for(int m = 0; m < M; m ++) cin >> TOMATO[h][n][m];
+		}
+	} 
+	// 3. bfs
+	bfs();
+	
+	// 4. 출력
+	if(existZero()){
+		cout << "-1";
+	} else{
+		cout << max_day;
+	}
+
 	return 0;
 }
